@@ -1077,6 +1077,48 @@ function setupUIHandlers() {
             toastr.error(`重置失败: ${error.message}`, '自动总结');
         }
     });
+    
+    // 删除总结条目
+    $('#delete_summary_entry_btn').on('click', async function() {
+        if (!confirm('⚠️ 警告：确定要完全删除总结条目吗？\n\n这将永久删除世界书中的总结条目及其所有内容，无法恢复！\n\n如果只是想重新开始，建议使用"重置进度"功能。')) {
+            return;
+        }
+        
+        try {
+            const lorebookName = await getTargetLorebookName();
+            const bookData = await loadWorldInfo(lorebookName);
+            
+            if (!bookData || !bookData.entries) {
+                toastr.error('未找到世界书', '自动总结');
+                return;
+            }
+            
+            // 找到总结条目并获取其key
+            let entryKeyToDelete = null;
+            for (const [key, entry] of Object.entries(bookData.entries)) {
+                if (entry.comment === SUMMARY_COMMENT && !entry.disable) {
+                    entryKeyToDelete = key;
+                    break;
+                }
+            }
+            
+            if (!entryKeyToDelete) {
+                toastr.info('未找到总结条目，无需删除', '自动总结');
+                return;
+            }
+            
+            // 删除条目
+            delete bookData.entries[entryKeyToDelete];
+            
+            await saveWorldInfo(lorebookName, bookData, true);
+            
+            toastr.success('总结条目已完全删除', '自动总结');
+            updateStatus();
+        } catch (error) {
+            console.error('[自动总结] 删除条目失败:', error);
+            toastr.error(`删除失败: ${error.message}`, '自动总结');
+        }
+    });
 }
 
 // 初始化扩展
