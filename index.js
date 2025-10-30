@@ -349,27 +349,16 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
             bookData.entries = {};
         }
         
-        // 查找现有的总结条目（只查找未禁用的）
-        const existingEntries = Object.entries(bookData.entries).filter(
-            ([key, entry]) => entry.comment === SUMMARY_COMMENT && !entry.disable
-        );
-        
-        // 如果找到多个条目，只保留第一个，禁用其他的
+        // 查找现有的总结条目
         let summaryEntry = null;
         let summaryEntryKey = null;
         
-        if (existingEntries.length > 0) {
-            // 使用第一个条目
-            [summaryEntryKey, summaryEntry] = existingEntries[0];
-            
-            // 禁用其他重复条目
-            if (existingEntries.length > 1) {
-                console.log(`[自动总结] 发现${existingEntries.length}个总结条目，禁用多余的`);
-                for (let i = 1; i < existingEntries.length; i++) {
-                    const [key, entry] = existingEntries[i];
-                    entry.disable = true;
-                    console.log(`[自动总结] 禁用重复条目: ${key}`);
-                }
+        for (const [key, entry] of Object.entries(bookData.entries)) {
+            if (entry.comment === SUMMARY_COMMENT && !entry.disable) {
+                summaryEntry = entry;
+                summaryEntryKey = key;
+                console.log(`[自动总结] 找到现有总结条目: ${key}`);
+                break;
             }
         }
         
@@ -378,10 +367,12 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
         
         if (summaryEntry) {
             // 更新现有条目
+            console.log(`[自动总结] 更新现有条目`);
             const contentWithoutSeal = summaryEntry.content.replace(PROGRESS_SEAL_REGEX, "").trim();
             summaryEntry.content = contentWithoutSeal + newChapter + newSeal;
         } else {
             // 创建新条目
+            console.log(`[自动总结] 创建新条目`);
             summaryEntryKey = Date.now().toString();
             
             const keywords = settings.lore.keywords.split(',').map(k => k.trim()).filter(Boolean);
@@ -401,6 +392,7 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
             };
             
             bookData.entries[summaryEntryKey] = summaryEntry;
+            console.log(`[自动总结] 新条目已添加到 bookData.entries，key: ${summaryEntryKey}`);
         }
         
         // 保存世界书
