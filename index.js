@@ -1026,6 +1026,43 @@ function setupUIHandlers() {
     $('#manual_large_summary_btn').on('click', async function() {
         await executeLargeSummary();
     });
+    
+    // 重置总结进度
+    $('#reset_progress_btn').on('click', async function() {
+        if (!confirm('确定要重置总结进度吗？这将清空世界书中的总结条目内容，但保留条目本身。\n\n重置后会从第1楼重新开始总结。')) {
+            return;
+        }
+        
+        try {
+            const lorebookName = await getTargetLorebookName();
+            const bookData = await loadWorldInfo(lorebookName);
+            
+            if (!bookData || !bookData.entries) {
+                toastr.error('未找到世界书', '自动总结');
+                return;
+            }
+            
+            const summaryEntry = Object.values(bookData.entries).find(
+                e => e.comment === SUMMARY_COMMENT && !e.disable
+            );
+            
+            if (!summaryEntry) {
+                toastr.info('未找到总结条目，无需重置', '自动总结');
+                return;
+            }
+            
+            // 重置内容为初始状态
+            summaryEntry.content = `以下是依照顺序已发生剧情\n\n本条勿动【前0楼总结已完成】否则后续总结无法进行。`;
+            
+            await saveWorldInfo(lorebookName, bookData, true);
+            
+            toastr.success('总结进度已重置，将从第1楼重新开始', '自动总结');
+            updateStatus();
+        } catch (error) {
+            console.error('[自动总结] 重置进度失败:', error);
+            toastr.error(`重置失败: ${error.message}`, '自动总结');
+        }
+    });
 }
 
 // 初始化扩展
