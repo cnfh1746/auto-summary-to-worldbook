@@ -87,6 +87,20 @@
         </div>
 
         <div class="auto-summary-field">
+            <label>
+                <input type="checkbox" id="large_summary_auto_enabled">
+                启用自动大总结
+            </label>
+            <small style="color: #999;">当总结条目的词符数达到阈值时自动触发</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="large_summary_token_threshold">自动触发阈值（词符数）：</label>
+            <input type="number" id="large_summary_token_threshold" min="1000" max="50000" value="5000">
+            <small style="color: #999;">当总结条目达到该词符数时自动执行大总结精炼</small>
+        </div>
+
+        <div class="auto-summary-field">
             <label for="large_summary_prompt">大总结提示词：</label>
             <textarea id="large_summary_prompt" placeholder="请输入大总结的系统提示词...">你是一个专业的内容精炼助手。你将收到多个零散的详细总结记录，请将它们提炼并融合成一段连贯、精简的章节历史。
 

@@ -37,6 +37,8 @@ const defaultSettings = {
     
     // 大总结设置
     largeSummary: {
+        autoEnabled: false,
+        tokenThreshold: 5000,
         prompt: `你是一个专业的内容精炼助手。你将收到多个零散的详细总结记录，请将它们提炼并融合成一段连贯、精简的章节历史。
 
 精炼要求：
@@ -422,8 +424,8 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
                 order: 100,
                 position: parseInt(settings.lore.insertionPosition) || 0,
                 disable: false,
-                excludeRecursion: false,
-                preventRecursion: false,
+                excludeRecursion: true,  // 不可递归（不会被其他条目激活）
+                preventRecursion: true,  // 防止进一步递归（本条目将不会激活其他条目）
                 delayUntilRecursion: false,
                 probability: 100,
                 useProbability: true,
@@ -450,6 +452,23 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
         await saveWorldInfo(lorebookName, bookData, true);
         
         toastr.success(`总结已写入世界书 ${lorebookName}`, '自动总结');
+        
+        // 检查是否需要自动触发大总结
+        if (settings.largeSummary.autoEnabled) {
+            const tokenCount = summaryEntry.content.length; // 简单估算，中文字符约等于词符数
+            console.log(`[自动总结] 当前总结条目词符数: ${tokenCount}, 阈值: ${settings.largeSummary.tokenThreshold}`);
+            
+            if (tokenCount >= settings.largeSummary.tokenThreshold) {
+                console.log('[自动总结] 达到大总结阈值，自动触发大总结');
+                toastr.info('总结条目已达词符阈值，将自动执行大总结...', '自动总结');
+                
+                // 延迟执行，让小总结的提示先显示
+                setTimeout(async () => {
+                    await executeLargeSummary();
+                }, 1000);
+            }
+        }
+        
         return true;
     } catch (error) {
         console.error('[自动总结] 写入世界书失败:', error);
@@ -742,6 +761,8 @@ function loadSettings() {
     $('#small_summary_prompt').val(settings.smallSummary.prompt);
     
     // 加载大总结设置
+    $('#large_summary_auto_enabled').prop('checked', settings.largeSummary.autoEnabled);
+    $('#large_summary_token_threshold').val(settings.largeSummary.tokenThreshold);
     $('#large_summary_prompt').val(settings.largeSummary.prompt);
     
     // 加载标签提取设置
@@ -786,6 +807,8 @@ function saveSettings() {
     settings.smallSummary.prompt = $('#small_summary_prompt').val();
     
     // 保存大总结设置
+    settings.largeSummary.autoEnabled = $('#large_summary_auto_enabled').prop('checked');
+    settings.largeSummary.tokenThreshold = parseInt($('#large_summary_token_threshold').val()) || 5000;
     settings.largeSummary.prompt = $('#large_summary_prompt').val();
     
     // 保存标签提取设置
