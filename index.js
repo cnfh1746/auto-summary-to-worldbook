@@ -149,6 +149,20 @@ async function readSummaryProgress(lorebookName) {
         console.log('[自动总结-调试] 世界书总条目数:', allEntries.length);
         console.log('[自动总结-调试] 所有条目的comment:', allEntries.map(e => e.comment));
         
+        // 列出所有条目的详细信息
+        console.log('[自动总结-调试] ===== 所有条目详细信息 =====');
+        allEntries.forEach((entry, index) => {
+            console.log(`[自动总结-调试] 条目${index + 1}:`, {
+                comment: entry.comment,
+                key: entry.key,
+                disable: entry.disable,
+                constant: entry.constant,
+                contentLength: entry.content?.length || 0,
+                contentPreview: entry.content?.substring(0, 50)
+            });
+        });
+        console.log('[自动总结-调试] ===== 条目列表结束 =====');
+        
         const summaryEntry = allEntries.find(
             e => e.comment === SUMMARY_COMMENT && !e.disable
         );
