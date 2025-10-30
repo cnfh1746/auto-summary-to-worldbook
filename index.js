@@ -336,10 +336,29 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
             bookData.entries = {};
         }
         
-        // 查找现有的总结条目
-        let summaryEntry = Object.values(bookData.entries).find(
-            e => e.comment === SUMMARY_COMMENT && !e.disable
+        // 查找现有的总结条目（只查找未禁用的）
+        const existingEntries = Object.entries(bookData.entries).filter(
+            ([key, entry]) => entry.comment === SUMMARY_COMMENT && !entry.disable
         );
+        
+        // 如果找到多个条目，只保留第一个，禁用其他的
+        let summaryEntry = null;
+        let summaryEntryKey = null;
+        
+        if (existingEntries.length > 0) {
+            // 使用第一个条目
+            [summaryEntryKey, summaryEntry] = existingEntries[0];
+            
+            // 禁用其他重复条目
+            if (existingEntries.length > 1) {
+                console.log(`[自动总结] 发现${existingEntries.length}个总结条目，禁用多余的`);
+                for (let i = 1; i < existingEntries.length; i++) {
+                    const [key, entry] = existingEntries[i];
+                    entry.disable = true;
+                    console.log(`[自动总结] 禁用重复条目: ${key}`);
+                }
+            }
+        }
         
         const newSeal = `\n\n本条勿动【前${endFloor}楼总结已完成】否则后续总结无法进行。`;
         const newChapter = `\n\n---\n\n【${startFloor}楼至${endFloor}楼详细总结记录】\n${summary}`;
@@ -350,13 +369,12 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
             summaryEntry.content = contentWithoutSeal + newChapter + newSeal;
         } else {
             // 创建新条目
-            const entryKey = Date.now().toString();
-            summaryEntry = createWorldInfoEntry(lorebookName, bookData);
+            summaryEntryKey = Date.now().toString();
             
             const keywords = settings.lore.keywords.split(',').map(k => k.trim()).filter(Boolean);
             const isConstant = settings.lore.activationMode === 'constant';
             
-            Object.assign(summaryEntry, {
+            summaryEntry = {
                 key: keywords,
                 comment: SUMMARY_COMMENT,
                 content: `以下是依照顺序已发生剧情` + newChapter + newSeal,
@@ -365,10 +383,11 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
                 position: parseInt(settings.lore.insertionPosition) || 0,
                 depth: parseInt(settings.lore.depth) || 4,
                 selectiveLogic: 0,
-                order: 100
-            });
+                order: 100,
+                uid: summaryEntryKey
+            };
             
-            bookData.entries[entryKey] = summaryEntry;
+            bookData.entries[summaryEntryKey] = summaryEntry;
         }
         
         // 保存世界书
@@ -593,7 +612,7 @@ async function checkAndAutoSummary() {
 }
 
 // 更新状态显示
-function updateStatus() {
+async function updateStatus() {
     const settings = extension_settings[extensionName];
     const context = getContext();
     
@@ -602,16 +621,38 @@ function updateStatus() {
         return;
     }
     
-    const statusHtml = `
-        <strong>当前状态：</strong><br>
-        • 功能状态: ${settings.enabled ? '✓ 已启用' : '✗ 未启用'}<br>
-        • 自动小总结: ${settings.smallSummary.autoEnabled ? '✓ 已启用' : '✗ 未启用'}<br>
-        • 当前对话长度: ${context.chat.length} 条消息<br>
-        • 保留消息数: ${settings.retentionCount}<br>
-        • 自动触发阈值: ${settings.smallSummary.threshold} 条
-    `;
-    
-    $('#summary_status').html(statusHtml);
+    try {
+        const lorebookName = await getTargetLorebookName();
+        const summarizedCount = await readSummaryProgress(lorebookName);
+        const currentChatLength = context.chat.length;
+        const retentionCount = settings.retentionCount || 5;
+        const summarizableLength = currentChatLength - retentionCount;
+        const unsummarizedCount = Math.max(0, summarizableLength - summarizedCount);
+        
+        const statusHtml = `
+            <strong>当前状态：</strong><br>
+            • 功能状态: ${settings.enabled ? '✓ 已启用' : '✗ 未启用'}<br>
+            • 自动小总结: ${settings.smallSummary.autoEnabled ? '✓ 已启用' : '✗ 未启用'}<br>
+            • 当前对话长度: ${currentChatLength} 条消息<br>
+            • 已总结: ${summarizedCount} 楼<br>
+            • 保留消息数: ${retentionCount}<br>
+            • 未总结消息: ${unsummarizedCount} 条<br>
+            • 自动触发阈值: ${settings.smallSummary.threshold} 条<br>
+            ${unsummarizedCount > 0 ? `<br><strong>💡 提示：</strong>点击"手动执行小总结"可总结第 ${summarizedCount + 1}-${Math.min(summarizedCount + settings.smallSummary.threshold, summarizableLength)} 楼` : '<br><strong>✓ 所有消息已总结完毕</strong>'}
+        `;
+        
+        $('#summary_status').html(statusHtml);
+    } catch (error) {
+        const statusHtml = `
+            <strong>当前状态：</strong><br>
+            • 功能状态: ${settings.enabled ? '✓ 已启用' : '✗ 未启用'}<br>
+            • 自动小总结: ${settings.smallSummary.autoEnabled ? '✓ 已启用' : '✗ 未启用'}<br>
+            • 当前对话长度: ${context.chat.length} 条消息<br>
+            • 保留消息数: ${settings.retentionCount}<br>
+            • 自动触发阈值: ${settings.smallSummary.threshold} 条
+        `;
+        $('#summary_status').html(statusHtml);
+    }
 }
 
 // 加载设置
