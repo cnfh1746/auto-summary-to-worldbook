@@ -214,8 +214,8 @@
         
         <div class="auto-summary-field">
             <label for="api_url">API地址：</label>
-            <input type="text" id="api_url" placeholder="留空使用ST默认API">
-            <small style="color: #999;">留空将使用SillyTavern的主API设置</small>
+            <input type="text" id="api_url" placeholder="留空使用ST默认API，例如: http://127.0.0.1:5000/v1">
+            <small style="color: #999;">留空将使用SillyTavern的主API设置。注意：只需要填到/v1，不需要加/chat/completions</small>
         </div>
 
         <div class="auto-summary-field">
@@ -228,6 +228,15 @@
             <label for="api_model">模型名称：</label>
             <input type="text" id="api_model" placeholder="留空使用ST默认模型">
             <small style="color: #999;">留空将使用SillyTavern当前选择的模型</small>
+        </div>
+
+        <div class="auto-summary-button-group">
+            <button class="auto-summary-btn" id="test_api_connection_btn">🔗 测试连接</button>
+            <button class="auto-summary-btn" id="fetch_models_btn">📥 拉取模型列表</button>
+            <button class="auto-summary-btn success" id="save_settings_btn">💾 保存设置</button>
+        </div>
+        
+        <div class="auto-summary-status" id="api_test_status" style="display: none; margin-top: 10px;">
         </div>
     </div>
 

@@ -221,7 +221,18 @@ async function callAI(messages) {
     // 如果有自定义API设置，使用自定义API
     if (settings.api.url) {
         try {
-            const response = await fetch(settings.api.url + '/v1/chat/completions', {
+            // 确保URL格式正确，避免重复拼接
+            let apiUrl = settings.api.url.trim();
+            if (!apiUrl.endsWith('/v1/chat/completions')) {
+                if (apiUrl.endsWith('/')) {
+                    apiUrl = apiUrl.slice(0, -1);
+                }
+                if (!apiUrl.includes('/v1/chat/completions')) {
+                    apiUrl += '/v1/chat/completions';
+                }
+            }
+            
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -734,11 +745,184 @@ function addExclusionRule() {
     renderExclusionRules();
 }
 
+// 测试API连接
+async function testAPIConnection() {
+    const settings = extension_settings[extensionName];
+    const statusDiv = $('#api_test_status');
+    
+    statusDiv.show().html('🔄 正在测试连接...').css('color', '#4a90e2');
+    
+    try {
+        let apiUrl = settings.api.url.trim();
+        if (!apiUrl) {
+            statusDiv.html('⚠️ 请先填写API地址').css('color', '#e74c3c');
+            return;
+        }
+        
+        // 确保URL格式正确
+        if (!apiUrl.endsWith('/v1/models')) {
+            if (apiUrl.endsWith('/')) {
+                apiUrl = apiUrl.slice(0, -1);
+            }
+            if (apiUrl.endsWith('/v1')) {
+                apiUrl += '/models';
+            } else {
+                apiUrl += '/v1/models';
+            }
+        }
+        
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${settings.api.key || ''}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        statusDiv.html('✓ 连接成功！').css('color', '#27ae60');
+        toastr.success('API连接测试成功', '自动总结');
+        
+        setTimeout(() => {
+            statusDiv.fadeOut();
+        }, 3000);
+    } catch (error) {
+        console.error('[自动总结] 测试连接失败:', error);
+        statusDiv.html(`✗ 连接失败: ${error.message}`).css('color', '#e74c3c');
+        toastr.error(`连接失败: ${error.message}`, '自动总结');
+    }
+}
+
+// 拉取模型列表
+async function fetchModels() {
+    const settings = extension_settings[extensionName];
+    const statusDiv = $('#api_test_status');
+    
+    statusDiv.show().html('🔄 正在获取模型列表...').css('color', '#4a90e2');
+    
+    try {
+        let apiUrl = settings.api.url.trim();
+        if (!apiUrl) {
+            statusDiv.html('⚠️ 请先填写API地址').css('color', '#e74c3c');
+            toastr.warning('请先填写API地址', '自动总结');
+            return;
+        }
+        
+        // 确保URL格式正确
+        if (!apiUrl.endsWith('/v1/models')) {
+            if (apiUrl.endsWith('/')) {
+                apiUrl = apiUrl.slice(0, -1);
+            }
+            if (apiUrl.endsWith('/v1')) {
+                apiUrl += '/models';
+            } else {
+                apiUrl += '/v1/models';
+            }
+        }
+        
+        const response = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${settings.api.key || ''}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.data || data.data.length === 0) {
+            statusDiv.html('⚠️ 未找到可用模型').css('color', '#e74c3c');
+            toastr.warning('未找到可用模型', '自动总结');
+            return;
+        }
+        
+        // 显示模型选择对话框
+        const modelNames = data.data.map(m => m.id || m.name || m).filter(Boolean);
+        
+        const modalHtml = `
+            <div class="auto-summary-modal">
+                <div class="auto-summary-modal-content">
+                    <div class="auto-summary-modal-header">
+                        <h2>📋 选择模型</h2>
+                    </div>
+                    <div class="auto-summary-modal-body">
+                        <p>找到 ${modelNames.length} 个可用模型：</p>
+                        <select id="model_select" size="10" style="width: 100%; padding: 5px;">
+                            ${modelNames.map(name => `<option value="${name}">${name}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="auto-summary-modal-footer">
+                        <button class="auto-summary-btn success" id="select_model_btn">✓ 选择</button>
+                        <button class="auto-summary-btn danger" id="cancel_model_btn">✗ 取消</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const modal = $(modalHtml);
+        $('body').append(modal);
+        
+        modal.find('#select_model_btn').on('click', function() {
+            const selectedModel = modal.find('#model_select').val();
+            if (selectedModel) {
+                $('#api_model').val(selectedModel);
+                settings.api.model = selectedModel;
+                saveSettings();
+                toastr.success(`已选择模型: ${selectedModel}`, '自动总结');
+            }
+            modal.remove();
+        });
+        
+        modal.find('#cancel_model_btn').on('click', function() {
+            modal.remove();
+        });
+        
+        modal.on('click', function(e) {
+            if (e.target === modal[0]) {
+                modal.remove();
+            }
+        });
+        
+        statusDiv.html(`✓ 找到 ${modelNames.length} 个模型`).css('color', '#27ae60');
+        setTimeout(() => {
+            statusDiv.fadeOut();
+        }, 3000);
+        
+    } catch (error) {
+        console.error('[自动总结] 获取模型列表失败:', error);
+        statusDiv.html(`✗ 获取失败: ${error.message}`).css('color', '#e74c3c');
+        toastr.error(`获取模型列表失败: ${error.message}`, '自动总结');
+    }
+}
+
 // 设置UI事件监听
 function setupUIHandlers() {
-    // 基础设置事件
-    $('#auto_summary_enabled, #small_summary_auto_enabled, #small_summary_interactive, #tag_extraction_enabled, #exclusion_enabled, #vectorization_enabled').on('change', saveSettings);
-    $('#auto_summary_target, #auto_summary_retention_count, #small_summary_threshold, #small_summary_prompt, #large_summary_prompt, #extraction_tags, #lore_activation_mode, #lore_keywords, #lore_insertion_position, #lore_depth, #api_url, #api_key, #api_model').on('input', saveSettings);
+    // 基础设置事件（移除自动保存，改为手动保存）
+    $('#auto_summary_enabled, #small_summary_auto_enabled, #small_summary_interactive, #tag_extraction_enabled, #exclusion_enabled, #vectorization_enabled').on('change', function() {
+        // 不自动保存，等待用户点击保存按钮
+    });
+    
+    $('#auto_summary_target, #auto_summary_retention_count, #small_summary_threshold, #small_summary_prompt, #large_summary_prompt, #extraction_tags, #lore_activation_mode, #lore_keywords, #lore_insertion_position, #lore_depth, #api_url, #api_key, #api_model').on('input', function() {
+        // 不自动保存，等待用户点击保存按钮
+    });
+    
+    // 保存设置按钮
+    $('#save_settings_btn').on('click', function() {
+        saveSettings();
+        toastr.success('设置已保存', '自动总结');
+    });
+    
+    // 测试连接按钮
+    $('#test_api_connection_btn').on('click', testAPIConnection);
+    
+    // 拉取模型按钮
+    $('#fetch_models_btn').on('click', fetchModels);
     
     // 添加排除规则按钮
     $('#add_exclusion_rule_btn').on('click', addExclusionRule);
