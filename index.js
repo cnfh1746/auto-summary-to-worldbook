@@ -992,11 +992,15 @@ function setupUIHandlers() {
             console.log('[自动总结-调试] 已总结楼层数:', summarizedCount);
             
             const retentionCount = settings.retentionCount || 5;
-            const summarizableLength = context.chat.length - retentionCount;
+            const totalMessages = context.chat.length;
+            const summarizableLength = totalMessages - retentionCount;
             const unsummarizedCount = summarizableLength - summarizedCount;
             
-            console.log('[自动总结-调试] 可总结长度:', summarizableLength);
-            console.log('[自动总结-调试] 未总结消息数:', unsummarizedCount);
+            console.log('[自动总结-调试] 总消息数:', totalMessages);
+            console.log('[自动总结-调试] 保留消息数:', retentionCount);
+            console.log('[自动总结-调试] 可总结长度 (总数-保留):', summarizableLength);
+            console.log('[自动总结-调试] 已总结数:', summarizedCount);
+            console.log('[自动总结-调试] 未总结消息数 (可总结-已总结):', unsummarizedCount);
             
             if (unsummarizedCount <= 0) {
                 console.log('[自动总结-调试] 没有需要总结的新消息');
