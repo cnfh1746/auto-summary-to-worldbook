@@ -1,0 +1,244 @@
+/* 自动总结世界书扩展样式 */
+
+#auto_summary_settings {
+    padding: 10px;
+}
+
+.auto-summary-section {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+}
+
+.auto-summary-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #ffffff;
+    font-size: 1.1em;
+    font-weight: bold;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 8px;
+}
+
+.auto-summary-field {
+    margin-bottom: 15px;
+}
+
+.auto-summary-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: #f0f0f0;
+    font-weight: 600;
+}
+
+.auto-summary-field input[type="text"],
+.auto-summary-field input[type="number"],
+.auto-summary-field textarea,
+.auto-summary-field select {
+    width: 100%;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    color: #fff;
+    box-sizing: border-box;
+}
+
+.auto-summary-field textarea {
+    min-height: 100px;
+    resize: vertical;
+    font-family: monospace;
+}
+
+.auto-summary-field input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.auto-summary-button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.auto-summary-btn {
+    padding: 8px 16px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.auto-summary-btn:hover {
+    background-color: #357abd;
+}
+
+.auto-summary-btn:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.auto-summary-btn.danger {
+    background-color: #e74c3c;
+}
+
+.auto-summary-btn.danger:hover {
+    background-color: #c0392b;
+}
+
+.auto-summary-btn.success {
+    background-color: #27ae60;
+}
+
+.auto-summary-btn.success:hover {
+    background-color: #229954;
+}
+
+.auto-summary-status {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.auto-summary-info {
+    padding: 10px;
+    background-color: rgba(74, 144, 226, 0.2);
+    border-left: 3px solid #4a90e2;
+    border-radius: 3px;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.auto-summary-warning {
+    padding: 10px;
+    background-color: rgba(231, 76, 60, 0.2);
+    border-left: 3px solid #e74c3c;
+    border-radius: 3px;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.exclusion-rule-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.exclusion-rule-item input {
+    flex: 1;
+}
+
+.exclusion-rule-item button {
+    padding: 5px 10px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.exclusion-rule-item button:hover {
+    background-color: #c0392b;
+}
+
+/* 对话框样式 */
+.auto-summary-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.auto-summary-modal-content {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.auto-summary-modal-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.auto-summary-modal-header h2 {
+    margin: 0;
+    color: #fff;
+}
+
+.auto-summary-modal-body {
+    margin-bottom: 15px;
+}
+
+.auto-summary-modal-body textarea {
+    width: 100%;
+    min-height: 300px;
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    color: #fff;
+    font-family: monospace;
+    resize: vertical;
+    box-sizing: border-box;
+}
+
+.auto-summary-modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* 进度指示器 */
+.auto-summary-progress {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: rgba(74, 144, 226, 0.2);
+    border-radius: 4px;
+    color: #fff;
+}
+
+.auto-summary-progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.auto-summary-progress-fill {
+    height: 100%;
+    background-color: #4a90e2;
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+}

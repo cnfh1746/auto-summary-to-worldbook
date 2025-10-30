@@ -1,0 +1,241 @@
+<div id="auto_summary_settings">
+    <div class="auto-summary-info">
+        <strong>📖 自动总结世界书</strong><br>
+        自动将聊天记录总结并写入世界书，支持小总结、大总结、标签提取和向量化功能。
+    </div>
+
+    <!-- 基础设置 -->
+    <div class="auto-summary-section">
+        <h3>⚙️ 基础设置</h3>
+        
+        <div class="auto-summary-field">
+            <label>
+                <input type="checkbox" id="auto_summary_enabled">
+                启用自动总结功能
+            </label>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="auto_summary_target">世界书目标：</label>
+            <select id="auto_summary_target">
+                <option value="character_main">角色主世界书</option>
+                <option value="dedicated">专用世界书 (Amily2-Lore-{对话ID})</option>
+            </select>
+            <small style="color: #999;">选择将总结写入角色的主世界书还是创建专用世界书</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="auto_summary_retention_count">保留最近消息数：</label>
+            <input type="number" id="auto_summary_retention_count" min="0" max="50" value="5">
+            <small style="color: #999;">不会总结最近的N条消息，保持新鲜对话</small>
+        </div>
+    </div>
+
+    <!-- 小总结设置 -->
+    <div class="auto-summary-section">
+        <h3>📝 小总结设置</h3>
+        
+        <div class="auto-summary-field">
+            <label>
+                <input type="checkbox" id="small_summary_auto_enabled">
+                启用自动小总结
+            </label>
+            <small style="color: #999;">当未总结消息达到阈值时自动触发</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="small_summary_threshold">自动触发阈值（消息数）：</label>
+            <input type="number" id="small_summary_threshold" min="5" max="100" value="20">
+            <small style="color: #999;">积累多少条未总结消息后自动执行小总结</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label>
+                <input type="checkbox" id="small_summary_interactive">
+                交互模式（需要确认）
+            </label>
+            <small style="color: #999;">取消勾选则完全自动执行，无需人工确认</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="small_summary_prompt">小总结提示词：</label>
+            <textarea id="small_summary_prompt" placeholder="请输入小总结的系统提示词...">你是一个专业的对话总结助手。请仔细阅读以下对话记录，提取关键信息并生成简洁、准确的总结。
+
+总结要求：
+1. 保留重要的剧情发展和角色互动
+2. 记录关键的情感变化和决策
+3. 简明扼要，避免冗余
+4. 使用第三人称叙述
+5. 保持客观中立的语气
+
+请基于对话内容生成总结。</textarea>
+        </div>
+
+        <div class="auto-summary-button-group">
+            <button class="auto-summary-btn" id="manual_small_summary_btn">手动执行小总结</button>
+        </div>
+    </div>
+
+    <!-- 大总结设置 -->
+    <div class="auto-summary-section">
+        <h3>📚 大总结设置</h3>
+        
+        <div class="auto-summary-info">
+            大总结会将多个小总结合并精炼，避免世界书条目过于冗长。
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="large_summary_prompt">大总结提示词：</label>
+            <textarea id="large_summary_prompt" placeholder="请输入大总结的系统提示词...">你是一个专业的内容精炼助手。你将收到多个零散的详细总结记录，请将它们提炼并融合成一段连贯、精简的章节历史。
+
+精炼要求：
+1. 保留所有关键剧情点和重要事件
+2. 合并重复或相似的信息
+3. 使用流畅的叙事结构
+4. 突出重要的转折点和高潮
+5. 压缩细节但保留核心内容
+6. 保持时间线的清晰和连贯
+
+请将以下多个总结记录精炼成一个完整的章节。</textarea>
+        </div>
+
+        <div class="auto-summary-button-group">
+            <button class="auto-summary-btn" id="manual_large_summary_btn">手动执行大总结</button>
+        </div>
+    </div>
+
+    <!-- 标签提取设置 -->
+    <div class="auto-summary-section">
+        <h3>🏷️ 标签提取设置</h3>
+        
+        <div class="auto-summary-field">
+            <label>
+                <input type="checkbox" id="tag_extraction_enabled">
+                启用标签提取
+            </label>
+            <small style="color: #999;">只总结特定XML标签内的内容</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="extraction_tags">要提取的标签（逗号分隔）：</label>
+            <input type="text" id="extraction_tags" placeholder="例如: content, narration, action" value="">
+            <small style="color: #999;">例如: content,narration 将只提取 &lt;content&gt; 和 &lt;narration&gt; 标签内的内容</small>
+        </div>
+    </div>
+
+    <!-- 内容排除规则 -->
+    <div class="auto-summary-section">
+        <h3>🚫 内容排除规则</h3>
+        
+        <div class="auto-summary-info">
+            排除规则可以在总结前移除不需要的内容，如HTML注释、特定标签等。
+        </div>
+
+        <div class="auto-summary-field">
+            <label>
+                <input type="checkbox" id="exclusion_enabled">
+                启用内容排除
+            </label>
+        </div>
+
+        <div id="exclusion_rules_container">
+            <!-- 排除规则将动态添加到这里 -->
+        </div>
+
+        <div class="auto-summary-button-group">
+            <button class="auto-summary-btn success" id="add_exclusion_rule_btn">+ 添加排除规则</button>
+        </div>
+
+        <div class="auto-summary-info" style="margin-top: 10px;">
+            <strong>常用排除规则示例：</strong><br>
+            • HTML注释: 起始 &lt;!-- 结束 --&gt;<br>
+            • XML注释: 起始 &lt;!-- 结束 --&gt;<br>
+            • 系统标签: 起始 &lt;system&gt; 结束 &lt;/system&gt;<br>
+            • 旁白标签: 起始 &lt;ooc&gt; 结束 &lt;/ooc&gt;
+        </div>
+    </div>
+
+    <!-- 向量化设置 -->
+    <div class="auto-summary-section">
+        <h3>🧠 向量化设置</h3>
+        
+        <div class="auto-summary-field">
+            <label>
+                <input type="checkbox" id="vectorization_enabled">
+                启用向量化功能
+            </label>
+            <small style="color: #999;">将旧的总结内容自动送入RAG向量数据库</small>
+        </div>
+
+        <div class="auto-summary-warning">
+            <strong>⚠️ 注意：</strong>向量化功能需要配置RAG/向量数据库插件。如果未配置，此功能将不生效。
+        </div>
+    </div>
+
+    <!-- 世界书条目设置 -->
+    <div class="auto-summary-section">
+        <h3>📋 世界书条目设置</h3>
+        
+        <div class="auto-summary-field">
+            <label for="lore_activation_mode">激活模式：</label>
+            <select id="lore_activation_mode">
+                <option value="constant">常驻激活</option>
+                <option value="keyed">关键词激活</option>
+            </select>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="lore_keywords">关键词（逗号分隔）：</label>
+            <input type="text" id="lore_keywords" placeholder="例如: 剧情, 总结, 历史" value="剧情, 总结, 历史">
+            <small style="color: #999;">仅在"关键词激活"模式下生效</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="lore_insertion_position">插入位置：</label>
+            <select id="lore_insertion_position">
+                <option value="0">在角色定义之后</option>
+                <option value="1">在示例对话之后</option>
+                <option value="2">在聊天历史之前</option>
+                <option value="3">在系统提示之后</option>
+                <option value="4">在AN顶部</option>
+            </select>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="lore_depth">深度（仅部分位置有效）：</label>
+            <input type="number" id="lore_depth" min="0" max="10" value="4">
+            <small style="color: #999;">控制在对话历史中的插入深度</small>
+        </div>
+    </div>
+
+    <!-- API设置 -->
+    <div class="auto-summary-section">
+        <h3>🔌 API设置</h3>
+        
+        <div class="auto-summary-field">
+            <label for="api_url">API地址：</label>
+            <input type="text" id="api_url" placeholder="留空使用ST默认API">
+            <small style="color: #999;">留空将使用SillyTavern的主API设置</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="api_key">API密钥：</label>
+            <input type="password" id="api_key" placeholder="留空使用ST默认密钥">
+            <small style="color: #999;">留空将使用SillyTavern的主API密钥</small>
+        </div>
+
+        <div class="auto-summary-field">
+            <label for="api_model">模型名称：</label>
+            <input type="text" id="api_model" placeholder="留空使用ST默认模型">
+            <small style="color: #999;">留空将使用SillyTavern当前选择的模型</small>
+        </div>
+    </div>
+
+    <!-- 状态显示 -->
+    <div class="auto-summary-section">
+        <h3>📊 状态信息</h3>
+        <div class="auto-summary-status" id="summary_status">
+            等待初始化...
+        </div>
+    </div>
+</div>

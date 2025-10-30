@@ -1,0 +1,12 @@
+{
+    "name": "auto-summary-to-worldbook",
+    "display_name": "自动总结世界书",
+    "version": "1.0.0",
+    "author": "cnfh1746",
+    "description": "自动将聊天记录总结并写入世界书。支持小总结、大总结、标签提取、内容排除和向量化功能。",
+    "minSillyTavernVersion": "1.10.0",
+    "requires": [],
+    "loading_order": 9999,
+    "js": "index.js",
+    "css": "style.css"
+}
