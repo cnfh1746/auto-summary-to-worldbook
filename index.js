@@ -318,18 +318,31 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
     
     try {
         const lorebookName = await getTargetLorebookName();
+        console.log(`[自动总结] 目标世界书: ${lorebookName}`);
         
         // 加载或创建世界书
         let bookData;
         try {
             bookData = await loadWorldInfo(lorebookName);
+            console.log(`[自动总结] 成功加载世界书`);
         } catch (error) {
             // 世界书不存在，创建新的
-            console.log(`[自动总结] 创建新世界书: ${lorebookName}`);
+            console.log(`[自动总结] 世界书不存在，创建新世界书: ${lorebookName}`);
+            console.log(`[自动总结] 错误信息:`, error);
+            
             bookData = {
                 entries: {},
                 name: lorebookName
             };
+            
+            // 先保存一次以创建文件
+            try {
+                await saveWorldInfo(lorebookName, bookData, true);
+                console.log(`[自动总结] 世界书文件创建成功`);
+            } catch (saveError) {
+                console.error(`[自动总结] 创建世界书文件失败:`, saveError);
+                throw new Error(`创建世界书失败: ${saveError.message}`);
+            }
         }
         
         if (!bookData.entries) {
@@ -391,12 +404,15 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
         }
         
         // 保存世界书
+        console.log(`[自动总结] 准备保存世界书，条目数: ${Object.keys(bookData.entries).length}`);
         await saveWorldInfo(lorebookName, bookData, true);
+        console.log(`[自动总结] 世界书保存成功`);
         
         toastr.success(`总结已写入世界书 ${lorebookName}`, '自动总结');
         return true;
     } catch (error) {
         console.error('[自动总结] 写入世界书失败:', error);
+        console.error('[自动总结] 错误堆栈:', error.stack);
         toastr.error(`写入失败: ${error.message}`, '自动总结');
         return false;
     }
