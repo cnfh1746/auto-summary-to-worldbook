@@ -349,24 +349,44 @@ async function writeSummaryToLorebook(summary, startFloor, endFloor) {
             const contentWithoutSeal = summaryEntry.content.replace(PROGRESS_SEAL_REGEX, "").trim();
             summaryEntry.content = contentWithoutSeal + newChapter + newSeal;
         } else {
-            // 创建新条目
+            // 创建新条目 - 不使用createWorldInfoEntry，直接创建对象避免重复
             const entryKey = Date.now().toString();
-            summaryEntry = createWorldInfoEntry(lorebookName, bookData);
-            
             const keywords = settings.lore.keywords.split(',').map(k => k.trim()).filter(Boolean);
             const isConstant = settings.lore.activationMode === 'constant';
             
-            Object.assign(summaryEntry, {
+            summaryEntry = {
+                uid: entryKey,
                 key: keywords,
+                keysecondary: [],
                 comment: SUMMARY_COMMENT,
                 content: `以下是依照顺序已发生剧情` + newChapter + newSeal,
                 constant: isConstant,
-                disable: false,
-                position: parseInt(settings.lore.insertionPosition) || 0,
-                depth: parseInt(settings.lore.depth) || 4,
+                selective: !isConstant,
                 selectiveLogic: 0,
-                order: 100
-            });
+                addMemo: false,
+                order: 100,
+                position: parseInt(settings.lore.insertionPosition) || 0,
+                disable: false,
+                excludeRecursion: false,
+                preventRecursion: false,
+                delayUntilRecursion: false,
+                probability: 100,
+                useProbability: true,
+                depth: parseInt(settings.lore.depth) || 4,
+                group: '',
+                groupOverride: false,
+                groupWeight: 100,
+                scanDepth: null,
+                caseSensitive: false,
+                matchWholeWords: false,
+                useGroupScoring: false,
+                automationId: '',
+                role: 0,
+                vectorized: false,
+                sticky: 0,
+                cooldown: 0,
+                delay: 0
+            };
             
             bookData.entries[entryKey] = summaryEntry;
         }
