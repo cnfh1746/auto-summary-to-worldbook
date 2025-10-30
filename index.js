@@ -668,7 +668,7 @@ async function checkAndAutoSummary() {
 }
 
 // 更新状态显示
-function updateStatus() {
+async function updateStatus() {
     const settings = extension_settings[extensionName];
     const context = getContext();
     
@@ -677,16 +677,49 @@ function updateStatus() {
         return;
     }
     
-    const statusHtml = `
-        <strong>当前状态：</strong><br>
-        • 功能状态: ${settings.enabled ? '✓ 已启用' : '✗ 未启用'}<br>
-        • 自动小总结: ${settings.smallSummary.autoEnabled ? '✓ 已启用' : '✗ 未启用'}<br>
-        • 当前对话长度: ${context.chat.length} 条消息<br>
-        • 保留消息数: ${settings.retentionCount}<br>
-        • 自动触发阈值: ${settings.smallSummary.threshold} 条
-    `;
-    
-    $('#summary_status').html(statusHtml);
+    try {
+        const lorebookName = await getTargetLorebookName();
+        const summarizedCount = await readSummaryProgress(lorebookName);
+        const totalMessages = context.chat.length;
+        const retentionCount = settings.retentionCount || 5;
+        const summarizableLength = totalMessages - retentionCount;
+        const unsummarizedCount = Math.max(0, summarizableLength - summarizedCount);
+        
+        const statusHtml = `
+            <strong>当前状态：</strong><br>
+            • 功能状态: ${settings.enabled ? '✓ 已启用' : '✗ 未启用'}<br>
+            • 自动小总结: ${settings.smallSummary.autoEnabled ? '✓ 已启用' : '✗ 未启用'}<br>
+            <br>
+            <strong>📊 总结进度：</strong><br>
+            • 当前对话总长度: <strong>${totalMessages}</strong> 楼<br>
+            • 保留最近消息数: ${retentionCount} 楼<br>
+            • 可总结范围: 1-${summarizableLength} 楼<br>
+            • <span style="color: #27ae60;">✓ 已总结: 1-${summarizedCount} 楼</span><br>
+            • <span style="color: ${unsummarizedCount >= settings.smallSummary.threshold ? '#e74c3c' : '#f39c12'};">⏳ 待总结: ${summarizedCount + 1}-${summarizableLength} 楼 (共 ${unsummarizedCount} 楼)</span><br>
+            <br>
+            <strong>🎯 自动触发：</strong><br>
+            • 自动触发阈值: ${settings.smallSummary.threshold} 楼<br>
+            • ${unsummarizedCount >= settings.smallSummary.threshold 
+                ? `<span style="color: #e74c3c;">⚠️ 已达阈值，${settings.smallSummary.autoEnabled ? '将自动触发总结' : '请手动执行总结'}</span>` 
+                : `<span style="color: #95a5a6;">还需 ${settings.smallSummary.threshold - unsummarizedCount} 楼触发自动总结</span>`
+            }
+        `;
+        
+        $('#summary_status').html(statusHtml);
+    } catch (error) {
+        console.error('[自动总结] 更新状态失败:', error);
+        const statusHtml = `
+            <strong>当前状态：</strong><br>
+            • 功能状态: ${settings.enabled ? '✓ 已启用' : '✗ 未启用'}<br>
+            • 自动小总结: ${settings.smallSummary.autoEnabled ? '✓ 已启用' : '✗ 未启用'}<br>
+            • 当前对话长度: ${context.chat.length} 条消息<br>
+            • 保留消息数: ${settings.retentionCount}<br>
+            • 自动触发阈值: ${settings.smallSummary.threshold} 条<br>
+            <br>
+            <span style="color: #e74c3c;">⚠️ 无法读取总结进度: ${error.message}</span>
+        `;
+        $('#summary_status').html(statusHtml);
+    }
 }
 
 // 加载设置
