@@ -232,6 +232,12 @@
             <small style="color: #999;">留空将使用SillyTavern当前选择的模型</small>
         </div>
 
+        <div class="auto-summary-field">
+            <label for="api_max_tokens">最大输出Token数：</label>
+            <input type="number" id="api_max_tokens" min="500" max="32000" value="8000">
+            <small style="color: #999;">控制AI输出的最大长度。建议值：简短总结2000-4000，详细总结8000-16000</small>
+        </div>
+
         <div class="auto-summary-button-group">
             <button class="auto-summary-btn" id="test_api_connection_btn">🔗 测试连接</button>
             <button class="auto-summary-btn" id="fetch_models_btn">📥 拉取模型列表</button>

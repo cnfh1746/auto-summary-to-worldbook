@@ -81,7 +81,8 @@ const defaultSettings = {
     api: {
         url: "",
         key: "",
-        model: ""
+        model: "",
+        maxTokens: 8000
     }
 };
 
@@ -284,7 +285,7 @@ async function callAI(messages) {
                     model: settings.api.model || 'gpt-3.5-turbo',
                     messages: messages,
                     temperature: 0.7,
-                    max_tokens: 2000
+                    max_tokens: parseInt(settings.api.maxTokens) || 8000
                 })
             });
             
@@ -731,6 +732,7 @@ function loadSettings() {
     $('#api_url').val(settings.api.url);
     $('#api_key').val(settings.api.key);
     $('#api_model').val(settings.api.model);
+    $('#api_max_tokens').val(settings.api.maxTokens || 8000);
     
     updateStatus();
 }
@@ -773,6 +775,7 @@ function saveSettings() {
     settings.api.url = $('#api_url').val();
     settings.api.key = $('#api_key').val();
     settings.api.model = $('#api_model').val();
+    settings.api.maxTokens = parseInt($('#api_max_tokens').val()) || 8000;
     
     saveSettingsDebounced();
     updateStatus();
