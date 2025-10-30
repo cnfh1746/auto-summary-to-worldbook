@@ -128,22 +128,50 @@ function applyExclusionRules(text, rules) {
 
 // 读取已总结的进度
 async function readSummaryProgress(lorebookName) {
-    if (!lorebookName) return 0;
+    console.log('[自动总结-调试] readSummaryProgress 开始, 世界书名:', lorebookName);
+    
+    if (!lorebookName) {
+        console.log('[自动总结-调试] 世界书名为空，返回0');
+        return 0;
+    }
     
     try {
         const bookData = await loadWorldInfo(lorebookName);
-        if (!bookData || !bookData.entries) return 0;
+        console.log('[自动总结-调试] 成功加载世界书数据');
+        console.log('[自动总结-调试] bookData.entries 存在:', !!bookData?.entries);
         
-        const summaryEntry = Object.values(bookData.entries).find(
+        if (!bookData || !bookData.entries) {
+            console.log('[自动总结-调试] 世界书数据或条目为空，返回0');
+            return 0;
+        }
+        
+        const allEntries = Object.values(bookData.entries);
+        console.log('[自动总结-调试] 世界书总条目数:', allEntries.length);
+        console.log('[自动总结-调试] 所有条目的comment:', allEntries.map(e => e.comment));
+        
+        const summaryEntry = allEntries.find(
             e => e.comment === SUMMARY_COMMENT && !e.disable
         );
         
-        if (!summaryEntry) return 0;
+        if (!summaryEntry) {
+            console.log('[自动总结-调试] 未找到总结条目（comment=【自动总结】对话历史总结），返回0');
+            return 0;
+        }
+        
+        console.log('[自动总结-调试] 找到总结条目');
+        console.log('[自动总结-调试] 条目内容长度:', summaryEntry.content?.length || 0);
+        console.log('[自动总结-调试] 条目内容前100字符:', summaryEntry.content?.substring(0, 100));
         
         const match = summaryEntry.content.match(PROGRESS_SEAL_REGEX);
-        return match ? parseInt(match[1], 10) : 0;
+        console.log('[自动总结-调试] 进度封印匹配结果:', match);
+        
+        const progress = match ? parseInt(match[1], 10) : 0;
+        console.log('[自动总结-调试] 返回进度:', progress);
+        
+        return progress;
     } catch (error) {
-        console.error(`[自动总结] 读取进度失败:`, error);
+        console.error('[自动总结-调试] 读取进度失败:', error);
+        console.error('[自动总结-调试] 错误堆栈:', error.stack);
         return 0;
     }
 }
@@ -947,19 +975,31 @@ function setupUIHandlers() {
     // 添加排除规则按钮
     $('#add_exclusion_rule_btn').on('click', addExclusionRule);
     
-    // 手动执行小总结
+// 手动执行小总结
     $('#manual_small_summary_btn').on('click', async function() {
         const settings = extension_settings[extensionName];
         const context = getContext();
         
+        console.log('[自动总结-调试] === 开始手动小总结 ===');
+        console.log('[自动总结-调试] 当前对话长度:', context.chat?.length || 0);
+        console.log('[自动总结-调试] 保留消息数:', settings.retentionCount);
+        
         try {
             const lorebookName = await getTargetLorebookName();
+            console.log('[自动总结-调试] 目标世界书:', lorebookName);
+            
             const summarizedCount = await readSummaryProgress(lorebookName);
+            console.log('[自动总结-调试] 已总结楼层数:', summarizedCount);
+            
             const retentionCount = settings.retentionCount || 5;
             const summarizableLength = context.chat.length - retentionCount;
             const unsummarizedCount = summarizableLength - summarizedCount;
             
+            console.log('[自动总结-调试] 可总结长度:', summarizableLength);
+            console.log('[自动总结-调试] 未总结消息数:', unsummarizedCount);
+            
             if (unsummarizedCount <= 0) {
+                console.log('[自动总结-调试] 没有需要总结的新消息');
                 toastr.info('没有需要总结的新消息', '自动总结');
                 return;
             }
@@ -967,9 +1007,13 @@ function setupUIHandlers() {
             const startFloor = summarizedCount + 1;
             const endFloor = Math.min(summarizedCount + settings.smallSummary.threshold, summarizableLength);
             
+            console.log('[自动总结-调试] 总结范围:', startFloor, '至', endFloor, '楼');
+            
             await executeSmallSummary(startFloor, endFloor, false);
+            console.log('[自动总结-调试] === 小总结完成 ===');
         } catch (error) {
-            console.error('[自动总结] 手动总结失败:', error);
+            console.error('[自动总结-调试] 手动总结失败:', error);
+            console.error('[自动总结-调试] 错误堆栈:', error.stack);
             toastr.error(`执行失败: ${error.message}`, '自动总结');
         }
     });
