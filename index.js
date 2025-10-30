@@ -338,6 +338,18 @@ async function generateSmallSummary(startFloor, endFloor) {
         .map(m => `【第 ${m.floor} 楼】 ${m.author}: ${m.content}`)
         .join('\n');
     
+    // 调试输出：显示发送给AI的完整内容
+    console.log('[自动总结-调试] ========== 发送给AI的内容 ==========');
+    console.log('[自动总结-调试] 总结范围:', startFloor, '至', endFloor, '楼');
+    console.log('[自动总结-调试] 提取到的消息数:', messages.length);
+    console.log('[自动总结-调试] 系统提示词:');
+    console.log(settings.smallSummary.prompt);
+    console.log('[自动总结-调试] ----------');
+    console.log('[自动总结-调试] 用户消息（对话记录）:');
+    console.log(formattedHistory);
+    console.log('[自动总结-调试] 对话记录总字符数:', formattedHistory.length);
+    console.log('[自动总结-调试] ==========================================');
+    
     const aiMessages = [
         { role: 'system', content: settings.smallSummary.prompt },
         { role: 'user', content: `请严格根据以下"对话记录"中的内容进行总结，不要添加任何额外信息。\n\n<对话记录>\n${formattedHistory}\n</对话记录>` }
