@@ -58,19 +58,6 @@ const defaultSettings = {
         tags: ""
     },
     
-    // 排除规则
-    exclusion: {
-        enabled: false,
-        rules: [
-            { start: "<!--", end: "-->" }
-        ]
-    },
-    
-    // 向量化
-    vectorization: {
-        enabled: false
-    },
-    
     // 世界书条目设置
     lore: {
         activationMode: "constant",
@@ -89,7 +76,7 @@ const defaultSettings = {
 };
 
 const SUMMARY_COMMENT = "【自动总结】对话历史总结";
-const PROGRESS_SEAL_REGEX = /本条勿动【前(\d+)楼总结已完成】否则后续总结无法进行。$/;
+const PROGRESS_SEAL_REGEX = /本条勿动【前(\d+)楼总结已完成】否则后续总结无法进行。/;
 
 // 工具函数：标签提取
 function extractBlocksByTags(text, tags) {
@@ -108,25 +95,6 @@ function extractBlocksByTags(text, tags) {
     });
     
     return blocks;
-}
-
-// 工具函数：应用排除规则
-function applyExclusionRules(text, rules) {
-    if (!text || !rules || rules.length === 0) return text;
-    
-    let result = text;
-    rules.forEach(rule => {
-        if (rule.start && rule.end) {
-            const startEscaped = rule.start.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const endEscaped = rule.end.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const regex = new RegExp(startEscaped + '[\\s\\S]*?' + endEscaped, 'g');
-            while (regex.test(result)) {
-                result = result.replace(regex, '');
-            }
-        }
-    });
-    
-    return result;
 }
 
 // 读取已总结的进度
@@ -219,8 +187,18 @@ function getUnsummarizedMessages(startFloor, endFloor) {
     
     if (!chat || chat.length === 0) return [];
     
-    const historySlice = chat.slice(startFloor - 1, endFloor);
+    // 确保startFloor至少从第2楼开始，跳过第1楼（可能包含其他扩展的缓存数据）
+    const safeStartFloor = Math.max(startFloor, 2);
+    
+    if (safeStartFloor > endFloor) {
+        console.log('[自动总结] 跳过第1楼后没有可读取的消息');
+        return [];
+    }
+    
+    const historySlice = chat.slice(safeStartFloor - 1, endFloor);
     if (historySlice.length === 0) return [];
+    
+    console.log(`[自动总结] 实际读取范围: 第${safeStartFloor}-${endFloor}楼 (已排除第1楼)`);
     
     const userName = context.name1 || '用户';
     const characterName = context.name2 || '角色';
@@ -229,7 +207,6 @@ function getUnsummarizedMessages(startFloor, endFloor) {
     const tagsToExtract = useTagExtraction && settings.tagExtraction.tags 
         ? settings.tagExtraction.tags.split(',').map(t => t.trim()).filter(Boolean) 
         : [];
-    const exclusionRules = settings.exclusion.enabled ? settings.exclusion.rules : [];
     
     const messages = historySlice.map((msg, index) => {
         let content = msg.mes;
@@ -242,13 +219,10 @@ function getUnsummarizedMessages(startFloor, endFloor) {
             }
         }
         
-        // 应用排除规则
-        content = applyExclusionRules(content, exclusionRules);
-        
         if (!content.trim()) return null;
         
         return {
-            floor: startFloor + index,
+            floor: safeStartFloor + index,
             author: msg.is_user ? userName : characterName,
             authorType: msg.is_user ? 'user' : 'char',
             content: content.trim()
@@ -769,13 +743,6 @@ function loadSettings() {
     $('#tag_extraction_enabled').prop('checked', settings.tagExtraction.enabled);
     $('#extraction_tags').val(settings.tagExtraction.tags);
     
-    // 加载排除规则设置
-    $('#exclusion_enabled').prop('checked', settings.exclusion.enabled);
-    renderExclusionRules();
-    
-    // 加载向量化设置
-    $('#vectorization_enabled').prop('checked', settings.vectorization.enabled);
-    
     // 加载世界书条目设置
     $('#lore_activation_mode').val(settings.lore.activationMode);
     $('#lore_keywords').val(settings.lore.keywords);
@@ -815,12 +782,6 @@ function saveSettings() {
     settings.tagExtraction.enabled = $('#tag_extraction_enabled').prop('checked');
     settings.tagExtraction.tags = $('#extraction_tags').val();
     
-    // 保存排除规则设置
-    settings.exclusion.enabled = $('#exclusion_enabled').prop('checked');
-    
-    // 保存向量化设置
-    settings.vectorization.enabled = $('#vectorization_enabled').prop('checked');
-    
     // 保存世界书条目设置
     settings.lore.activationMode = $('#lore_activation_mode').val();
     settings.lore.keywords = $('#lore_keywords').val();
@@ -835,47 +796,6 @@ function saveSettings() {
     
     saveSettingsDebounced();
     updateStatus();
-}
-
-// 渲染排除规则
-function renderExclusionRules() {
-    const settings = extension_settings[extensionName];
-    const container = $('#exclusion_rules_container');
-    container.empty();
-    
-    settings.exclusion.rules.forEach((rule, index) => {
-        const ruleItem = $(`
-            <div class="exclusion-rule-item">
-                <input type="text" placeholder="起始标记" value="${rule.start}" data-index="${index}" data-field="start">
-                <input type="text" placeholder="结束标记" value="${rule.end}" data-index="${index}" data-field="end">
-                <button data-index="${index}">删除</button>
-            </div>
-        `);
-        
-        ruleItem.find('input').on('input', function() {
-            const idx = $(this).data('index');
-            const field = $(this).data('field');
-            settings.exclusion.rules[idx][field] = $(this).val();
-            saveSettings();
-        });
-        
-        ruleItem.find('button').on('click', function() {
-            const idx = $(this).data('index');
-            settings.exclusion.rules.splice(idx, 1);
-            saveSettings();
-            renderExclusionRules();
-        });
-        
-        container.append(ruleItem);
-    });
-}
-
-// 添加排除规则
-function addExclusionRule() {
-    const settings = extension_settings[extensionName];
-    settings.exclusion.rules.push({ start: '', end: '' });
-    saveSettings();
-    renderExclusionRules();
 }
 
 // 测试API连接
@@ -1037,7 +957,7 @@ async function fetchModels() {
 // 设置UI事件监听
 function setupUIHandlers() {
     // 基础设置事件（移除自动保存，改为手动保存）
-    $('#auto_summary_enabled, #small_summary_auto_enabled, #small_summary_interactive, #tag_extraction_enabled, #exclusion_enabled, #vectorization_enabled').on('change', function() {
+    $('#auto_summary_enabled, #small_summary_auto_enabled, #small_summary_interactive, #tag_extraction_enabled').on('change', function() {
         // 不自动保存，等待用户点击保存按钮
     });
     
@@ -1057,10 +977,7 @@ function setupUIHandlers() {
     // 拉取模型按钮
     $('#fetch_models_btn').on('click', fetchModels);
     
-    // 添加排除规则按钮
-    $('#add_exclusion_rule_btn').on('click', addExclusionRule);
-    
-// 手动执行小总结
+    // 手动执行小总结
     $('#manual_small_summary_btn').on('click', async function() {
         const settings = extension_settings[extensionName];
         const context = getContext();
