@@ -139,58 +139,9 @@
         </div>
     </div>
 
-    <!-- 内容排除规则 -->
-    <div class="auto-summary-section">
-        <h3>🚫 内容排除规则</h3>
-        
-        <div class="auto-summary-info">
-            排除规则可以在总结前移除不需要的内容，如HTML注释、特定标签等。
-        </div>
-
-        <div class="auto-summary-field">
-            <label>
-                <input type="checkbox" id="exclusion_enabled">
-                启用内容排除
-            </label>
-        </div>
-
-        <div id="exclusion_rules_container">
-            <!-- 排除规则将动态添加到这里 -->
-        </div>
-
-        <div class="auto-summary-button-group">
-            <button class="auto-summary-btn success" id="add_exclusion_rule_btn">+ 添加排除规则</button>
-        </div>
-
-        <div class="auto-summary-info" style="margin-top: 10px;">
-            <strong>常用排除规则示例：</strong><br>
-            • HTML注释: 起始 &lt;!-- 结束 --&gt;<br>
-            • XML注释: 起始 &lt;!-- 结束 --&gt;<br>
-            • 系统标签: 起始 &lt;system&gt; 结束 &lt;/system&gt;<br>
-            • 旁白标签: 起始 &lt;ooc&gt; 结束 &lt;/ooc&gt;
-        </div>
-    </div>
-
-    <!-- 向量化设置 -->
-    <div class="auto-summary-section">
-        <h3>🧠 向量化设置</h3>
-        
-        <div class="auto-summary-field">
-            <label>
-                <input type="checkbox" id="vectorization_enabled">
-                启用向量化功能
-            </label>
-            <small style="color: #999;">将旧的总结内容自动送入RAG向量数据库</small>
-        </div>
-
-        <div class="auto-summary-warning">
-            <strong>⚠️ 注意：</strong>向量化功能需要配置RAG/向量数据库插件。如果未配置，此功能将不生效。
-        </div>
-    </div>
-
     <!-- 世界书条目设置 -->
     <div class="auto-summary-section">
-        <h3>📋 世界书条目设置</h3>
+        <h3>� 世界书条目设置</h3>
         
         <div class="auto-summary-field">
             <label for="lore_activation_mode">激活模式：</label>
@@ -226,7 +177,7 @@
 
     <!-- API设置 -->
     <div class="auto-summary-section">
-        <h3>🔌 API设置</h3>
+        <h3>� API设置</h3>
         
         <div class="auto-summary-field">
             <label for="api_url">API地址：</label>
